@@ -1,0 +1,95 @@
+<Window x:Class="ManagementHotel.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ManagementHotel"
+        mc:Ignorable="d"
+        Title="Hotel Management" Height="450" Width="866">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Exit" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="Windows">
+                <MenuItem x:Name="miLogin" Header="Login" Click="OpenLogin_Click"/>
+                <MenuItem x:Name="miProfile" Header="My Profile" Click="OpenProfile_Click"/>
+                <MenuItem x:Name="miRooms" Header="Rooms" Click="OpenRooms_Click"/>
+                <MenuItem x:Name="miRoomTypes" Header="Room Types" Click="OpenRoomTypes_Click"/>
+                <MenuItem x:Name="miCustomers" Header="Customers" Click="OpenCustomers_Click"/>
+                <MenuItem x:Name="miBookings" Header="Bookings" Click="OpenBookings_Click"/>
+                <MenuItem x:Name="miServices" Header="Services" Click="OpenServices_Click"/>
+                <MenuItem x:Name="miInvoices" Header="Invoices" Click="OpenInvoices_Click"/>
+                <MenuItem x:Name="miHousekeeping" Header="Housekeeping" Click="OpenHousekeeping_Click"/>
+            </MenuItem>
+        </Menu>
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="8">
+            <Button x:Name="btnLoad" Width="120" Height="32" Click="btnLoad_Click">Load Rooms</Button>
+            <Button x:Name="btnMyBookings" Width="120" Height="32" Margin="8,0,0,0" Click="OpenBookings_Click">My Bookings</Button>
+            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Text="Rooms" FontWeight="Bold" />
+        </StackPanel>
+        <DataGrid x:Name="dgRooms" AutoGenerateColumns="False" Margin="8" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Room #" Binding="{Binding RoomNumber}" Width="*"/>
+                <DataGridTextColumn Header="Floor" Binding="{Binding Floor}" Width="*"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding RoomType.Name}" Width="2*"/>
+                <DataGridTemplateColumn Header="Status" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <!-- Default: show Reserved if a current customer exists -->
+                                        <Setter Property="Text" Value="Reserved"/>
+                                        <Style.Triggers>
+                                            <!-- If no current customer name, show bound Status -->
+                                            <DataTrigger Binding="{Binding CurrentCustomerName}" Value="{x:Null}">
+                                                <Setter Property="Text" Value="{Binding Status}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CurrentCustomerName}" Value="">
+                                                <Setter Property="Text" Value="{Binding Status}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Price/Night" Binding="{Binding PricePerNight, StringFormat={}{0:N0} ₫}" Width="*" ElementStyle="{StaticResource RightAlignText}"/>
+                <DataGridTextColumn x:Name="colCurrentCustomer" Header="Current Customer" Binding="{Binding CurrentCustomerName}" Width="2*"/>
+                <DataGridTemplateColumn x:Name="colBook" Header="Action" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Book" Padding="8,2" Click="BookRoom_Click">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <!-- Default disabled -->
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Style.Triggers>
+                                            <!-- Enable only when room Status is Available AND there is no current customer name -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Status}" Value="Available"/>
+                                                    <Condition Binding="{Binding CurrentCustomerName}" Value=""/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Status}" Value="Available"/>
+                                                    <Condition Binding="{Binding CurrentCustomerName}" Value="{x:Null}"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

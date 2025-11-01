@@ -1,0 +1,14 @@
+<Window x:Class="ManagementHotel.RoomTypesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Room Types" Height="400" Width="600" WindowStartupLocation="CenterOwner">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
+            <Button x:Name="btnAdd" Width="90" Margin="0,0,8,0" Click="Add_Click">Add</Button>
+            <Button x:Name="btnEdit" Width="90" Margin="0,0,8,0" Click="Edit_Click">Edit</Button>
+            <Button x:Name="btnDelete" Width="90" Margin="0,0,8,0" Click="Delete_Click">Delete</Button>
+            <Button x:Name="btnRefresh" Width="90" Click="Refresh_Click">Refresh</Button>
+        </StackPanel>
+        <DataGrid x:Name="dg" AutoGenerateColumns="True" IsReadOnly="True" Margin="8"/>
+    </DockPanel>
+</Window>
