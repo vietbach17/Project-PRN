@@ -41,14 +41,12 @@ public partial class BookingsWindow : Window
             {
                 items = await _service.GetAllAsync(conn);
             }
-            _allItems = items;
-            ApplyStatusFilter();
+            dg.ItemsSource = items;
         }
         catch (Exception ex)
         {
             MessageBox.Show(ex.Message, "Load Bookings Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        ApplyRolePermissions();
         UpdateCurrentUserLabel();
     }
 
@@ -128,51 +126,19 @@ public partial class BookingsWindow : Window
             MessageBox.Show(ex.Message, "Delete Booking Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
-
     private void ApplyRolePermissions()
     {
-        if (AppSession.IsAdmin)
-        {
-            btnAdd.IsEnabled = true;
-            btnEdit.IsEnabled = true;
-            btnDelete.IsEnabled = true;
-            return;
-        }
-        if (AppSession.IsStaff)
-        {
-            btnAdd.IsEnabled = true;
-            btnEdit.IsEnabled = true;
-            btnDelete.IsEnabled = false;
-            return;
-        }
-        // Customer: only Add new booking
-        btnAdd.IsEnabled = true;
-        btnEdit.IsEnabled = false;
-        btnDelete.IsEnabled = false;
-    }
-
-    private void StatusFilter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (!IsLoaded) return; // avoid running during InitializeComponent
-        ApplyStatusFilter();
-    }
-
-    private void ApplyStatusFilter()
-    {
-        if (_allItems is null) return;
-        if (dg == null) return; // DataGrid not ready yet
-        string? selected = (cbStatusFilter?.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString();
-        if (string.IsNullOrEmpty(selected) || selected == "All")
-        {
-            dg.ItemsSource = _allItems;
-            return;
-        }
-        var filtered = _allItems.Where(i => string.Equals(i.Status, selected, StringComparison.OrdinalIgnoreCase)).ToList();
-        dg.ItemsSource = filtered;
+        // No-op: action buttons were removed from the UI
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void OpenProfile_Click(object sender, RoutedEventArgs e)
+    {
+        var w = new ProfileWindow { Owner = this };
+        w.ShowDialog();
     }
 }
