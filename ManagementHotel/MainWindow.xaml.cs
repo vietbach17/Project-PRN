@@ -25,22 +25,19 @@ namespace ManagementHotel
         public MainWindow()
         {
             InitializeComponent();
-            Loaded += (_, __) => ApplyRolePermissions();
-            Loaded += async (_, __) => await LoadRoomsForCustomerAsync();
+            Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object? sender, RoutedEventArgs e)
+        {
+            txtCurrentUser.Text = AppSession.CurrentUser?.Username ?? "Guest";
+            ApplyRolePermissions();
+            await LoadRoomsAsync();
         }
 
         private async void btnLoad_Click(object sender, RoutedEventArgs e)
         {
-            string conn = Config.GetConnectionString();
-            try
-            {
-                var rooms = await _roomService.GetRoomsAsync(conn);
-                dgRooms.ItemsSource = rooms;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Load Rooms Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await LoadRoomsAsync();
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -116,12 +113,20 @@ namespace ManagementHotel
                 miInvoices.Visibility = Visibility.Collapsed;
                 miHousekeeping.Visibility = Visibility.Collapsed;
 
-                // Show rooms list with quick booking
-                btnLoad.Visibility = Visibility.Collapsed;
+                btnLoad.Visibility = Visibility.Visible;
                 dgRooms.Visibility = Visibility.Visible;
                 colBook.Visibility = Visibility.Visible;
-                // Do not show other customers' names to a customer
                 colCurrentCustomer.Visibility = Visibility.Collapsed;
+
+                btnNavProfile.Visibility = Visibility.Visible;
+                btnNavRooms.Visibility = Visibility.Collapsed;
+                btnNavBookings.Visibility = Visibility.Collapsed;
+                btnNavRoomTypes.Visibility = Visibility.Collapsed;
+                btnNavCustomers.Visibility = Visibility.Collapsed;
+                btnNavServices.Visibility = Visibility.Collapsed;
+                btnNavInvoices.Visibility = Visibility.Collapsed;
+                btnNavHousekeeping.Visibility = Visibility.Collapsed;
+                navMgmtSeparator.Visibility = Visibility.Collapsed;
             }
             else
             {
@@ -136,14 +141,22 @@ namespace ManagementHotel
                 colBook.Visibility = Visibility.Collapsed;
                 btnLoad.Visibility = Visibility.Visible;
                 dgRooms.Visibility = Visibility.Visible;
-                // Staff/Admin can see current customer name
                 colCurrentCustomer.Visibility = Visibility.Visible;
+
+                btnNavProfile.Visibility = Visibility.Visible;
+                btnNavRooms.Visibility = Visibility.Visible;
+                btnNavBookings.Visibility = Visibility.Visible;
+                btnNavRoomTypes.Visibility = Visibility.Visible;
+                btnNavCustomers.Visibility = Visibility.Visible;
+                btnNavServices.Visibility = Visibility.Visible;
+                btnNavInvoices.Visibility = Visibility.Visible;
+                btnNavHousekeeping.Visibility = Visibility.Visible;
+                navMgmtSeparator.Visibility = Visibility.Visible;
             }
         }
 
-        private async Task LoadRoomsForCustomerAsync()
+        private async Task LoadRoomsAsync()
         {
-            if (!AppSession.IsCustomer) return;
             string conn = Config.GetConnectionString();
             try
             {
@@ -175,13 +188,39 @@ namespace ManagementHotel
                 try
                 {
                     await _bookingService.AddAsync(conn, dlg.Model);
-                    await LoadRoomsForCustomerAsync();
+                    await LoadRoomsAsync();
                     MessageBox.Show("Booked successfully.", "Booking", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Booking Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+        }
+
+        private async void Logout_Click(object sender, RoutedEventArgs e)
+        {
+            AppSession.Clear();
+            RoleContext.SetRole(null);
+            RoleContext.SetCustomerId(null);
+            txtCurrentUser.Text = string.Empty;
+            dgRooms.ItemsSource = null;
+
+            Hide();
+            var login = new LoginWindow { Owner = this };
+            login.ShowDialog();
+
+            if (AppSession.CurrentUser != null)
+            {
+                Show();
+                txtCurrentUser.Text = AppSession.CurrentUser?.Username ?? "Guest";
+                ApplyRolePermissions();
+                await LoadRoomsAsync();
+                Activate();
+            }
+            else
+            {
+                Close();
             }
         }
     }

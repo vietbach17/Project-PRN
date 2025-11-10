@@ -21,7 +21,7 @@ public partial class LoginWindow : Window
         string pass = Password ?? string.Empty;
         if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
         {
-            MessageBox.Show("Please enter username and password.");
+            MessageBox.Show("Please enter username and password.", "Login failed" , MessageBoxButton.OK , MessageBoxImage.Information);
             return;
         }
         try
