@@ -14,8 +14,17 @@ public partial class BookingsWindow : Window
     public BookingsWindow()
     {
         InitializeComponent();
-        Loaded += async (_, __) => await ReloadAsync();
+        Loaded += async (_, __) =>
+        {
+            UpdateCurrentUserLabel();
+            await ReloadAsync();
+        };
         ApplyRolePermissions();
+    }
+
+    private void UpdateCurrentUserLabel()
+    {
+        txtCurrentUser.Text = AppSession.CurrentUser?.Username ?? "Guest";
     }
 
     private async Task ReloadAsync()
@@ -40,6 +49,7 @@ public partial class BookingsWindow : Window
             MessageBox.Show(ex.Message, "Load Bookings Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         ApplyRolePermissions();
+        UpdateCurrentUserLabel();
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e)
@@ -159,5 +169,10 @@ public partial class BookingsWindow : Window
         }
         var filtered = _allItems.Where(i => string.Equals(i.Status, selected, StringComparison.OrdinalIgnoreCase)).ToList();
         dg.ItemsSource = filtered;
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

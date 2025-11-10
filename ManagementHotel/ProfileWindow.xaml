@@ -53,35 +53,41 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,4,0,0">
+        <StackPanel Grid.Row="1" Margin="0,4,0,0">
             <GroupBox Header="Account">
-                <UniformGrid Columns="2" Rows="4" Margin="4">
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Username</TextBlock>
-                    <TextBox x:Name="txtUsername" Margin="0,4"/>
-
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Current Password</TextBlock>
-                    <PasswordBox x:Name="txtCurrentPass" Margin="0,4"/>
-
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">New Password</TextBlock>
-                    <PasswordBox x:Name="txtNewPass" Margin="0,4"/>
-
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Confirm</TextBlock>
-                    <PasswordBox x:Name="txtConfirm" Margin="0,4"/>
-                </UniformGrid>
-            </GroupBox>
-
-            <GroupBox Header="Customer">
-                <UniformGrid Columns="2" Rows="3" Margin="4">
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Full name</TextBlock>
+                <UniformGrid Columns="2" Rows="5" Margin="4">
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Full Name"/>
                     <TextBox x:Name="txtFullName" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Email</TextBlock>
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Username"/>
+                    <TextBox x:Name="txtUsername" Margin="0,4"/>
+
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Email"/>
                     <TextBox x:Name="txtEmail" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Phone</TextBlock>
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Phone"/>
                     <TextBox x:Name="txtPhone" Margin="0,4"/>
+
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="ID Number"/>
+                    <TextBox x:Name="txtIDNumber" Margin="0,4"/>
+
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Address"/>
+                    <TextBox x:Name="txtAddress" Margin="0,4"/>
                 </UniformGrid>
             </GroupBox>
+
+            <Expander Header="Change password" x:Name="expPassword" Margin="0,12,0,0" IsExpanded="False">
+                <UniformGrid Columns="2" Rows="3" Margin="4">
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Current Password"/>
+                    <PasswordBox x:Name="txtCurrentPass" Margin="0,4"/>
+
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="New Password"/>
+                    <PasswordBox x:Name="txtNewPass" Margin="0,4"/>
+
+                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Confirm Password"/>
+                    <PasswordBox x:Name="txtConfirm" Margin="0,4"/>
+                </UniformGrid>
+            </Expander>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">

@@ -39,6 +39,8 @@ public partial class RegisterWindow : Window
         string fullName = txtFullName.Text.Trim();
         string email = txtEmail.Text.Trim();
         string phone = txtPhone.Text.Trim();
+        string address = txtAddress.Text.Trim();
+        string idNumber = txtIDNumber.Text.Trim();
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(pass) || string.IsNullOrWhiteSpace(fullName))
         {
@@ -70,7 +72,9 @@ public partial class RegisterWindow : Window
             {
                 FullName = fullName,
                 Email = string.IsNullOrWhiteSpace(email) ? null : email,
-                Phone = string.IsNullOrWhiteSpace(phone) ? null : phone
+                Phone = string.IsNullOrWhiteSpace(phone) ? null : phone,
+                IDNumber = string.IsNullOrWhiteSpace(idNumber) ? null : idNumber,
+                Address = string.IsNullOrWhiteSpace(address) ? null : address
             };
             int customerId = await _customers.AddForRegistrationAsync(conn, customer);
 

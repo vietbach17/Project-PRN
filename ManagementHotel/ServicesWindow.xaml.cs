@@ -12,8 +12,17 @@ public partial class ServicesWindow : Window
     public ServicesWindow()
     {
         InitializeComponent();
-        Loaded += async (_, __) => await ReloadAsync();
+        Loaded += async (_, __) =>
+        {
+            UpdateCurrentUserLabel();
+            await ReloadAsync();
+        };
         ApplyRolePermissions();
+    }
+
+    private void UpdateCurrentUserLabel()
+    {
+        txtCurrentUser.Text = AppSession.CurrentUser?.Username ?? "Guest";
     }
 
     private async Task ReloadAsync()
@@ -29,6 +38,7 @@ public partial class ServicesWindow : Window
             MessageBox.Show(ex.Message, "Load Services Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         ApplyRolePermissions();
+        UpdateCurrentUserLabel();
     }
 
     private void ApplyRolePermissions()

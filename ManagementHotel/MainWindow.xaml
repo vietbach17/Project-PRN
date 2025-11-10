@@ -49,12 +49,6 @@
                             </StackPanel>
                         </Button>
                         <Separator x:Name="navMgmtSeparator" Margin="0,12,0,12"/>
-                        <Button x:Name="btnNavProfile" Margin="0,0,0,8" Click="OpenProfile_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" Margin="0,0,8,0"/>
-                                <TextBlock Text="My Profile"/>
-                            </StackPanel>
-                        </Button>
                         <Button x:Name="btnNavRooms" Margin="0,0,0,8" Click="OpenRooms_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B1;" Margin="0,0,8,0"/>
@@ -112,20 +106,23 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Rooms overview" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock FontSize="12" Foreground="{StaticResource ForegroundDimBrush}" Text="Signed in as:" Margin="0,0,4,0"/>
-                        <TextBlock x:Name="txtCurrentUser" FontWeight="SemiBold"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" >
+                        <TextBlock FontSize="12" Foreground="{StaticResource ForegroundDimBrush}" Text="Signed in as:" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtCurrentUser" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button x:Name="btnProfileQuick" Click="OpenProfile_Click" Margin="6,0,0,0" Background="Transparent" BorderBrush="{x:Null}" BorderThickness="0" Padding="2" ToolTip="My Profile">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" FontSize="16"/>
+                        </Button>
                     </StackPanel>
                 </Grid>
                 <DataGrid x:Name="dgRooms" Grid.Row="1" AutoGenerateColumns="False" Margin="0,12,0,12" IsReadOnly="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Room #" Binding="{Binding RoomNumber}" Width="*"/>
-                        <DataGridTextColumn Header="Floor" Binding="{Binding Floor}" Width="*"/>
+                        <DataGridTextColumn Header="Room #" Binding="{Binding RoomNumber}" Width="*" ElementStyle="{StaticResource CenterAlignText}"/>
+                        <DataGridTextColumn Header="Floor" Binding="{Binding Floor}" Width="*" ElementStyle="{StaticResource CenterAlignText}"/>
                         <DataGridTextColumn Header="Type" Binding="{Binding RoomType.Name}" Width="2*"/>
                         <DataGridTemplateColumn Header="Status" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock>
+                                    <TextBlock HorizontalAlignment="Center" TextAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="Reserved"/>

@@ -64,6 +64,10 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
         var u = AppSession.CurrentUser;
         txtUsername.Text = u.Username;
+        txtCurrentPass.Password = string.Empty;
+        txtNewPass.Password = string.Empty;
+        txtConfirm.Password = string.Empty;
+        expPassword.IsExpanded = false;
         // Load customer info if mapped
         if (u.CustomerId is int cid && cid > 0)
         {
@@ -74,6 +78,8 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
                 txtFullName.Text = c.FullName ?? string.Empty;
                 txtEmail.Text = c.Email ?? string.Empty;
                 txtPhone.Text = c.Phone ?? string.Empty;
+                txtIDNumber.Text = c.IDNumber ?? string.Empty;
+                txtAddress.Text = c.Address ?? string.Empty;
             }
         }
         else
@@ -81,6 +87,8 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
             txtFullName.IsEnabled = false;
             txtEmail.IsEnabled = false;
             txtPhone.IsEnabled = false;
+            txtIDNumber.IsEnabled = false;
+            txtAddress.IsEnabled = false;
         }
     }
 
@@ -126,11 +134,17 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
 
         // Email validate
-        if (!ValidateEmail(txtEmail.Text.Trim()))
+        string email = txtEmail.Text.Trim();
+        if (!ValidateEmail(email))
         {
             MessageBox.Show("Invalid email format");
             return;
         }
+
+        string idNumber = txtIDNumber.Text.Trim();
+        string address = txtAddress.Text.Trim();
+        string phone = txtPhone.Text.Trim();
+        string fullName = txtFullName.Text.Trim();
 
         try
         {
@@ -155,9 +169,12 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
                 var c = await _customerService.GetByIdAsync(conn, cid);
                 if (c != null)
                 {
-                    c.FullName = string.IsNullOrWhiteSpace(txtFullName.Text) ? c.FullName : txtFullName.Text.Trim();
-                    c.Email = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim();
-                    c.Phone = string.IsNullOrWhiteSpace(txtPhone.Text) ? null : txtPhone.Text.Trim();
+                    if (!string.IsNullOrWhiteSpace(fullName))
+                        c.FullName = fullName;
+                    c.Email = string.IsNullOrWhiteSpace(email) ? null : email;
+                    c.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone;
+                    c.IDNumber = string.IsNullOrWhiteSpace(idNumber) ? null : idNumber;
+                    c.Address = string.IsNullOrWhiteSpace(address) ? null : address;
                     await _customerService.UpdateAsync(conn, c);
                 }
             }
