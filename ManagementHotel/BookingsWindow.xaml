@@ -16,54 +16,28 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="Bookings" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock FontSize="12" Foreground="{StaticResource ForegroundDimBrush}" Text="Signed in as:"/>
-                <TextBlock x:Name="txtCurrentUser" FontWeight="SemiBold" Margin="4,0,0,0"/>
+            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="{StaticResource ForegroundDimBrush}" Text="Signed in as:"/>
+                    <TextBlock x:Name="txtCurrentUser" FontWeight="SemiBold" Margin="4,0,0,0"/>
+                </StackPanel>
+                <Button x:Name="btnProfileInBookings" Width="100" Margin="0,4,0,0" Click="OpenProfile_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;"/>
+                        <TextBlock Text="Profile" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 
         <DockPanel Grid.Row="1" Margin="0,16,0,12">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <Button x:Name="btnAdd" Width="100" Click="Add_Click" Margin="0,0,8,0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;"/>
-                        <TextBlock Text="Add" Margin="6,0,0,0"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="btnEdit" Width="100" Click="Edit_Click" Margin="0,0,8,0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;"/>
-                        <TextBlock Text="Edit" Margin="6,0,0,0"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="btnDelete" Width="100" Click="Delete_Click" Margin="0,0,8,0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;"/>
-                        <TextBlock Text="Delete" Margin="6,0,0,0"/>
-                    </StackPanel>
-                </Button>
                 <Button x:Name="btnRefresh" Width="100" Click="Refresh_Click" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE72C;"/>
                         <TextBlock Text="Refresh" Margin="6,0,0,0"/>
                     </StackPanel>
                 </Button>
-                <Button Width="100" Click="Close_Click">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;"/>
-                        <TextBlock Text="Close" Margin="6,0,0,0"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                <TextBlock VerticalAlignment="Center" Text="Status"/>
-                <ComboBox x:Name="cbStatusFilter" Width="160" Margin="8,0,0,0" SelectionChanged="StatusFilter_Changed">
-                    <ComboBoxItem Content="All" IsSelected="True"/>
-                    <ComboBoxItem Content="Reserved"/>
-                    <ComboBoxItem Content="CheckedIn"/>
-                    <ComboBoxItem Content="CheckedOut"/>
-                    <ComboBoxItem Content="Cancelled"/>
-                </ComboBox>
             </StackPanel>
         </DockPanel>
 
@@ -83,18 +57,26 @@
             </DataGrid>
         </Border>
         <Border Grid.Row="3" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,12,0,0" Padding="12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding SelectedItem.CheckInDate, ElementName=dg, StringFormat=Check-in: {0:dd/MM/yyyy}}"/>
-                <TextBlock Grid.Column="1" Text="{Binding SelectedItem.CheckOutDate, ElementName=dg, StringFormat=Check-out: {0:dd/MM/yyyy}}"/>
-                <TextBlock Grid.Column="2" Text="{Binding SelectedItem.TotalDue, ElementName=dg, StringFormat=Total: {0:N0} ₫}"/>
-                <TextBlock Grid.Column="3" Text="{Binding SelectedItem.AmountPaid, ElementName=dg, StringFormat=Paid: {0:N0} ₫}"/>
-            </Grid>
+            <DockPanel>
+                <Grid DockPanel.Dock="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedItem.CheckInDate, ElementName=dg, StringFormat=Check-in: {0:dd/MM/yyyy}}"/>
+                    <TextBlock Grid.Column="1" Text="{Binding SelectedItem.CheckOutDate, ElementName=dg, StringFormat=Check-out: {0:dd/MM/yyyy}}"/>
+                    <TextBlock Grid.Column="2" Text="{Binding SelectedItem.TotalDue, ElementName=dg, StringFormat=Total: {0:N0} ₫}"/>
+                    <TextBlock Grid.Column="3" Text="{Binding SelectedItem.AmountPaid, ElementName=dg, StringFormat=Paid: {0:N0} ₫}"/>
+                </Grid>
+                <Button DockPanel.Dock="Right" Width="100" HorizontalAlignment="Right" Click="Close_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;"/>
+                        <TextBlock Text="Close" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

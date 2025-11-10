@@ -22,7 +22,7 @@ public class BookingService : IBookingService
     }
     public Task<bool> UpdateAsync(string connectionString, Booking booking, CancellationToken ct = default)
     {
-        Authorization.EnsureCanUpdateBooking();
+        Authorization.EnsureCanUpdateBooking(booking.CustomerId);
         booking.Status = NormalizeStatus(booking.Status);
         return _repo.UpdateAsync(connectionString, booking, ct);
     }
