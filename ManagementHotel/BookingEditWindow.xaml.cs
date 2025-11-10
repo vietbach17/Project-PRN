@@ -11,6 +11,7 @@ public partial class BookingEditWindow : Window
     public Booking Model { get; private set; }
     private readonly ICustomerService _customerService = new CustomerService();
     private readonly IRoomService _roomService = new RoomService();
+    private Customer? _selectedCustomer;
 
     public BookingEditWindow(Booking? model = null)
     {
@@ -18,25 +19,41 @@ public partial class BookingEditWindow : Window
         Model = model ?? new Booking { Status = "Pending", CheckInDate = System.DateTime.Today, CheckOutDate = System.DateTime.Today.AddDays(1) };
         Loaded += async (_, __) =>
         {
-            await LoadCustomersAsync();
+            await LoadCustomerAsync();
             await LoadRoomsAsync();
             BindFromModel();
             // lock customer selection for Customer role
             if (AppSession.IsCustomer && AppSession.CurrentUser?.CustomerId is int cid && cid > 0)
             {
-                cbCustomer.SelectedValue = cid;
-                cbCustomer.IsEnabled = false;
-                Model.CustomerId = cid;
+                await SetCustomerAsync(cid);
+                btnSelectCustomer.IsEnabled = false;
             }
         };
     }
 
-    private async Task LoadCustomersAsync()
+    private async Task LoadCustomerAsync()
+    {
+        if (Model.CustomerId <= 0) return;
+        await SetCustomerAsync(Model.CustomerId);
+    }
+
+    private async Task SetCustomerAsync(int customerId)
     {
         string conn = Config.GetConnectionString();
-        var customers = await _customerService.GetAllAsync(conn);
-        cbCustomer.ItemsSource = customers;
-        cbCustomer.SelectedValue = Model.CustomerId == 0 && customers.Count > 0 ? customers[0].CustomerId : Model.CustomerId;
+        var customer = await _customerService.GetByIdAsync(conn, customerId);
+        if (customer != null)
+        {
+            _selectedCustomer = customer;
+            Model.CustomerId = customer.CustomerId;
+            txtCustomer.Text = string.IsNullOrWhiteSpace(customer.FullName) ? $"Customer #{customer.CustomerId}" : customer.FullName;
+        }
+    }
+
+    private void SetCustomer(Customer customer)
+    {
+        _selectedCustomer = customer;
+        Model.CustomerId = customer.CustomerId;
+        txtCustomer.Text = string.IsNullOrWhiteSpace(customer.FullName) ? $"Customer #{customer.CustomerId}" : customer.FullName;
     }
 
     private async Task LoadRoomsAsync()
@@ -67,10 +84,10 @@ public partial class BookingEditWindow : Window
 
     private bool BindToModel()
     {
-        if (cbCustomer.SelectedValue is not int customerId)
+        if (Model.CustomerId <= 0)
         {
-            MessageBox.Show("Please select a customer", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-            cbCustomer.Focus();
+            MessageBox.Show("Please choose a customer", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+            btnSelectCustomer.Focus();
             return false;
         }
         if (cbRoom.SelectedValue is not int roomId)
@@ -92,13 +109,25 @@ public partial class BookingEditWindow : Window
             return false;
         }
         var status = (cbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Pending";
-        Model.CustomerId = customerId;
         Model.RoomId = roomId;
         Model.CheckInDate = ci;
         Model.CheckOutDate = co;
         Model.Status = status;
         Model.Notes = string.IsNullOrWhiteSpace(txtNotes.Text) ? null : txtNotes.Text.Trim();
         return true;
+    }
+
+    private async void SelectCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new CustomerPickerWindow { Owner = this };
+        if (dlg.ShowDialog() == true && dlg.SelectedCustomer != null)
+        {
+            SetCustomer(dlg.SelectedCustomer);
+        }
+        else if (dlg.SelectedCustomerId.HasValue)
+        {
+            await SetCustomerAsync(dlg.SelectedCustomerId.Value);
+        }
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

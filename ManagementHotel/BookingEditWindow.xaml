@@ -15,10 +15,17 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="140"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <TextBlock Text="Customer" VerticalAlignment="Center"/>
-        <ComboBox x:Name="cbCustomer" Grid.Column="1" Margin="8,0,0,6" DisplayMemberPath="FullName" SelectedValuePath="CustomerId"/>
+        <TextBox x:Name="txtCustomer" Grid.Column="1" Margin="8,0,0,6" IsReadOnly="True"/>
+        <Button x:Name="btnSelectCustomer" Grid.Column="2" Width="90" Margin="8,0,0,6" Click="SelectCustomer_Click">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B2;"/>
+                <TextBlock Text="Select" Margin="6,0,0,0"/>
+            </StackPanel>
+        </Button>
 
         <TextBlock Grid.Row="1" Text="Room" VerticalAlignment="Center"/>
         <ComboBox x:Name="cbRoom" Grid.Row="1" Grid.Column="1" Margin="8,0,0,6" DisplayMemberPath="RoomNumber" SelectedValuePath="RoomId"/>
@@ -31,15 +38,16 @@
 
         <TextBlock Grid.Row="4" Text="Status" VerticalAlignment="Center"/>
         <ComboBox x:Name="cbStatus" Grid.Row="4" Grid.Column="1" Margin="8,0,0,6">
-            <ComboBoxItem Content="Pending"/>
-            <ComboBoxItem Content="Confirmed"/>
-            <ComboBoxItem Content="Canceled"/>
+            <ComboBoxItem Content="Reserved"/>
+            <ComboBoxItem Content="CheckedIn"/>
+            <ComboBoxItem Content="CheckedOut"/>
+            <ComboBoxItem Content="Cancelled"/>
         </ComboBox>
 
         <TextBlock Grid.Row="5" Text="Notes" VerticalAlignment="Center"/>
         <TextBox x:Name="txtNotes" Grid.Row="5" Grid.Column="1" Margin="8,0,0,6"/>
 
-        <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Width="90" Margin="0,0,8,0" Click="Save_Click">Save</Button>
             <Button Width="90" Click="Cancel_Click">Cancel</Button>
         </StackPanel>

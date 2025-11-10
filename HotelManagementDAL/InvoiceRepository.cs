@@ -12,8 +12,10 @@ public class InvoiceRepository : IInvoiceRepository
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync(ct);
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"select i.InvoiceId, i.BookingId, c.FullName,
-       i.SubtotalRoom, i.SubtotalService, i.Tax, i.Discount, i.Total, i.IssuedAt
+        cmd.CommandText = @"select i.InvoiceId, i.BookingId, c.FullName, c.Phone, c.Email,
+       i.SubtotalRoom, i.SubtotalService, i.Tax, i.Discount, i.Total, i.IssuedAt,
+       b.CheckInDate, b.CheckOutDate,
+       (select isnull(sum(p.Amount),0) from Payments p where p.BookingId = i.BookingId) as AmountPaid
 from Invoices i
 join Bookings b on b.BookingId = i.BookingId
 join Customers c on c.CustomerId = b.CustomerId
@@ -26,12 +28,17 @@ order by i.InvoiceId desc";
                 InvoiceId = rd.GetInt32(0),
                 BookingId = rd.GetInt32(1),
                 CustomerName = rd.GetString(2),
-                SubtotalRoom = rd.GetDecimal(3),
-                SubtotalService = rd.GetDecimal(4),
-                Tax = rd.GetDecimal(5),
-                Discount = rd.GetDecimal(6),
-                Total = rd.GetDecimal(7),
-                IssuedAt = rd.GetDateTime(8)
+                CustomerPhone = await rd.IsDBNullAsync(3, ct) ? null : rd.GetString(3),
+                CustomerEmail = await rd.IsDBNullAsync(4, ct) ? null : rd.GetString(4),
+                SubtotalRoom = rd.GetDecimal(5),
+                SubtotalService = rd.GetDecimal(6),
+                Tax = rd.GetDecimal(7),
+                Discount = rd.GetDecimal(8),
+                Total = rd.GetDecimal(9),
+                IssuedAt = rd.GetDateTime(10),
+                CheckInDate = rd.GetDateTime(11),
+                CheckOutDate = rd.GetDateTime(12),
+                AmountPaid = rd.GetDecimal(13)
             });
         }
         return list;
