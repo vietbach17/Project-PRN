@@ -110,11 +110,17 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         string password = txtPassword.Password;
 
         // Email validate
-        if (!ValidateEmail(txtEmail.Text.Trim()))
+        string email = txtEmail.Text.Trim();
+        if (!ValidateEmail(email))
         {
             MessageBox.Show("Invalid email format");
             return;
         }
+
+        string idNumber = txtIDNumber.Text.Trim();
+        string address = txtAddress.Text.Trim();
+        string phone = txtPhone.Text.Trim();
+        string fullName = txtFullName.Text.Trim();
 
         try
         {

@@ -39,7 +39,7 @@ public class BookingService : IBookingService
     }
     public async Task<bool> UpdateAsync(string connectionString, Booking booking, CancellationToken ct = default)
     {
-        Authorization.EnsureCanUpdateBooking();
+        Authorization.EnsureCanUpdateBooking(booking.CustomerId);
         booking.Status = NormalizeStatus(booking.Status);
         var updated = await _repo.UpdateAsync(connectionString, booking, ct);
         if (updated)
