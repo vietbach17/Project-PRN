@@ -8,7 +8,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <GroupBox Header="Account" Margin="0,0,0,12">
-            <UniformGrid Columns="2" Rows="8" Margin="4">
+            <UniformGrid Columns="2" Rows="9" Margin="4">
                 <TextBlock VerticalAlignment="Center" Text="Full Name"/>
                 <TextBox x:Name="txtFullName"/>
                 <TextBlock VerticalAlignment="Center" Text="Username"/>

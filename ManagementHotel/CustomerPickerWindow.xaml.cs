@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Input;
 using HotelManagementBLL;
 using HotelManagementModels;
 
@@ -12,10 +12,8 @@ namespace ManagementHotel
     public partial class CustomerPickerWindow : Window
     {
         private readonly ICustomerService _customerService = new CustomerService();
-        private IReadOnlyList<Customer> _allCustomers = Array.Empty<Customer>();
-
+        private IReadOnlyList<Customer> _customers = Array.Empty<Customer>();
         public Customer? SelectedCustomer { get; private set; }
-        public int? SelectedCustomerId { get; private set; }
 
         public CustomerPickerWindow()
         {
@@ -26,50 +24,80 @@ namespace ManagementHotel
         private async Task LoadAsync()
         {
             string conn = Config.GetConnectionString();
-            try
+            _customers = await _customerService.GetAllAsync(conn);
+            ApplyFilter(txtSearch.Text);
+        }
+
+        private void ApplyFilter(string? keyword)
+        {
+            if (_customers is null)
             {
-                _allCustomers = await _customerService.GetAllAsync(conn);
-                dgCustomers.ItemsSource = _allCustomers;
+                dgCustomers.ItemsSource = null;
+                return;
             }
-            catch (Exception ex)
+            if (string.IsNullOrWhiteSpace(keyword))
             {
-                MessageBox.Show(ex.Message, "Load customers", MessageBoxButton.OK, MessageBoxImage.Error);
+                dgCustomers.ItemsSource = _customers;
+                return;
+            }
+            keyword = keyword.Trim().ToLowerInvariant();
+            var filtered = _customers
+                .Where(c => (!string.IsNullOrEmpty(c.FullName) && c.FullName.ToLowerInvariant().Contains(keyword))
+                            || (!string.IsNullOrEmpty(c.Phone) && c.Phone.ToLowerInvariant().Contains(keyword))
+                            || (!string.IsNullOrEmpty(c.Email) && c.Email.ToLowerInvariant().Contains(keyword))
+                            || (!string.IsNullOrEmpty(c.IDNumber) && c.IDNumber.ToLowerInvariant().Contains(keyword)))
+                .ToList();
+            dgCustomers.ItemsSource = filtered;
+        }
+
+        private async void Search_Click(object sender, RoutedEventArgs e)
+        {
+            if (_customers.Count == 0)
+            {
+                await LoadAsync();
+            }
+            else
+            {
+                ApplyFilter(txtSearch.Text);
             }
         }
 
-        private void Search_TextChanged(object sender, TextChangedEventArgs e)
+        private async void Clear_Click(object sender, RoutedEventArgs e)
         {
-            if (_allCustomers == null) return;
-            string term = txtSearch.Text?.Trim() ?? string.Empty;
-            if (string.IsNullOrEmpty(term))
-            {
-                dgCustomers.ItemsSource = _allCustomers;
-                return;
-            }
-
-            term = term.ToLowerInvariant();
-            var filtered = _allCustomers.Where(c =>
-                (!string.IsNullOrEmpty(c.FullName) && c.FullName.ToLowerInvariant().Contains(term)) ||
-                (!string.IsNullOrEmpty(c.Email) && c.Email.ToLowerInvariant().Contains(term)) ||
-                (!string.IsNullOrEmpty(c.Phone) && c.Phone.ToLowerInvariant().Contains(term)) ||
-                (!string.IsNullOrEmpty(c.IDNumber) && c.IDNumber.ToLowerInvariant().Contains(term))
-            ).ToList();
-
-            dgCustomers.ItemsSource = filtered;
+            txtSearch.Text = string.Empty;
+            await LoadAsync();
         }
 
         private void Select_Click(object sender, RoutedEventArgs e)
         {
+            SelectCurrent();
+        }
+
+        private void dgCustomers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            SelectCurrent();
+        }
+
+        private void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ApplyFilter(txtSearch.Text);
+                e.Handled = true;
+            }
+        }
+
+        private void SelectCurrent()
+        {
             if (dgCustomers.SelectedItem is Customer customer)
             {
                 SelectedCustomer = customer;
-                SelectedCustomerId = customer.CustomerId;
                 DialogResult = true;
                 Close();
             }
             else
             {
-                MessageBox.Show("Please select a customer.", "Select", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Please select a customer.");
             }
         }
 

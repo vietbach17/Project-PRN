@@ -1,5 +1,3 @@
-using System.Configuration;
-using System.Data;
 using System.Windows;
 using HotelManagementBLL;
 using System;
@@ -42,6 +40,14 @@ namespace ManagementHotel
                 }
             };
             login.Show();
+        }
+
+        private void WindowLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Window window)
+            {
+                AppSession.ApplyWindowUserTitle(window);
+            }
         }
     }
 

@@ -39,8 +39,8 @@ public partial class RegisterWindow : Window
         string fullName = txtFullName.Text.Trim();
         string email = txtEmail.Text.Trim();
         string phone = txtPhone.Text.Trim();
-        string address = txtAddress.Text.Trim();
         string idNumber = txtIDNumber.Text.Trim();
+        string address = txtAddress.Text.Trim();
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(pass) || string.IsNullOrWhiteSpace(fullName))
         {

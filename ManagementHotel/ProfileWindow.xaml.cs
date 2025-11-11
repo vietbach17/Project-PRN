@@ -64,10 +64,7 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
         var u = AppSession.CurrentUser;
         txtUsername.Text = u.Username;
-        txtCurrentPass.Password = string.Empty;
-        txtNewPass.Password = string.Empty;
-        txtConfirm.Password = string.Empty;
-        expPassword.IsExpanded = false;
+        txtPassword.Password = string.Empty;
         // Load customer info if mapped
         if (u.CustomerId is int cid && cid > 0)
         {
@@ -110,28 +107,7 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
 
         // Password change (optional)
-        string newPass = txtNewPass.Password;
-        string confirm = txtConfirm.Password;
-        if (!string.IsNullOrEmpty(newPass) || !string.IsNullOrEmpty(confirm))
-        {
-            // require current password to change
-            string current = txtCurrentPass.Password;
-            if (string.IsNullOrEmpty(current))
-            {
-                MessageBox.Show("Please enter your current password to change it.");
-                return;
-            }
-            if (!VerifyPasswordLocal(u.PasswordHash, current))
-            {
-                MessageBox.Show("Current password is incorrect.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            if (newPass != confirm)
-            {
-                MessageBox.Show("Password confirmation does not match");
-                return;
-            }
-        }
+        string password = txtPassword.Password;
 
         // Email validate
         string email = txtEmail.Text.Trim();
@@ -156,9 +132,9 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
             }
 
             // Update password if provided
-            if (!string.IsNullOrEmpty(newPass))
+            if (!string.IsNullOrEmpty(password))
             {
-                var hash = ComputeSha256Hex(newPass);
+                var hash = ComputeSha256Hex(password);
                 await _usersRepo.UpdatePasswordHashAsync(conn, u.UserId, hash);
                 u.PasswordHash = hash;
             }
@@ -169,12 +145,11 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
                 var c = await _customerService.GetByIdAsync(conn, cid);
                 if (c != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(fullName))
-                        c.FullName = fullName;
-                    c.Email = string.IsNullOrWhiteSpace(email) ? null : email;
-                    c.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone;
-                    c.IDNumber = string.IsNullOrWhiteSpace(idNumber) ? null : idNumber;
-                    c.Address = string.IsNullOrWhiteSpace(address) ? null : address;
+                    c.FullName = string.IsNullOrWhiteSpace(txtFullName.Text) ? c.FullName : txtFullName.Text.Trim();
+                    c.Email = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim();
+                    c.Phone = string.IsNullOrWhiteSpace(txtPhone.Text) ? null : txtPhone.Text.Trim();
+                    c.IDNumber = string.IsNullOrWhiteSpace(txtIDNumber.Text) ? null : txtIDNumber.Text.Trim();
+                    c.Address = string.IsNullOrWhiteSpace(txtAddress.Text) ? null : txtAddress.Text.Trim();
                     await _customerService.UpdateAsync(conn, c);
                 }
             }
@@ -191,5 +166,11 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void ChangePassword_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ChangePasswordWindow { Owner = this };
+        dlg.ShowDialog();
     }
 }

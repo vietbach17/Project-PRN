@@ -60,4 +60,22 @@ public partial class LoginWindow : Window
             Close();
         }
     }
+
+    private void ForgotPassword_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ForgotPasswordWindow { Owner = this };
+        dlg.ShowDialog();
+    }
+
+    private void FindUsername_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new FindUsernameWindow { Owner = this };
+        dlg.ShowDialog();
+    }
+
+    private void ChangePassword_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ChangePasswordWindow { Owner = this };
+        dlg.ShowDialog();
+    }
 }

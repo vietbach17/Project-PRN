@@ -23,6 +23,7 @@
             <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="13"/>
+            <EventSetter Event="Loaded" Handler="WindowLoaded"/>
         </Style>
 
         <!-- Buttons -->

@@ -16,7 +16,7 @@ public partial class BookingsWindow : Window
         InitializeComponent();
         Loaded += async (_, __) =>
         {
-            UpdateCurrentUserLabel();
+            txtUserBanner.Text = $"Signed in as {AppSession.GetUserDisplay()}";
             await ReloadAsync();
         };
         ApplyRolePermissions();
