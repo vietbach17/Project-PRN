@@ -12,8 +12,14 @@ public class BookingRepository : IBookingRepository
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync(ct);
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"select b.BookingId, c.FullName, b.CheckInDate, b.CheckOutDate, b.Status, b.Notes
-from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.BookingId desc";
+        cmd.CommandText = @"select b.BookingId, c.FullName,
+       (select top 1 r.RoomNumber from BookingRooms br join Rooms r on r.RoomId = br.RoomId where br.BookingId = b.BookingId order by br.BookingRoomId) as RoomNumber,
+       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes,
+       (select isnull(sum(((i.SubtotalRoom+i.SubtotalService)+i.Tax)-i.Discount),0) from Invoices i where i.BookingId = b.BookingId) as TotalDue,
+       (select isnull(sum(p.Amount),0) from Payments p where p.BookingId = b.BookingId) as AmountPaid
+from Bookings b
+join Customers c on c.CustomerId = b.CustomerId
+order by b.BookingId desc";
         await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct);
         while (await rd.ReadAsync(ct))
         {
@@ -21,10 +27,13 @@ from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.Booki
             {
                 BookingId = rd.GetInt32(0),
                 CustomerName = rd.GetString(1),
-                CheckInDate = rd.GetDateTime(2),
-                CheckOutDate = rd.GetDateTime(3),
-                Status = rd.GetString(4),
-                Notes = await rd.IsDBNullAsync(5, ct) ? null : rd.GetString(5)
+                RoomNumber = await rd.IsDBNullAsync(2, ct) ? null : rd.GetString(2),
+                CheckInDate = rd.GetDateTime(3),
+                CheckOutDate = rd.GetDateTime(4),
+                Status = rd.GetString(5),
+                Notes = await rd.IsDBNullAsync(6, ct) ? null : rd.GetString(6),
+                TotalDue = rd.GetDecimal(7),
+                AmountPaid = rd.GetDecimal(8)
             });
         }
         return list;
@@ -36,9 +45,15 @@ from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.Booki
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync(ct);
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"select b.BookingId, c.FullName, b.CheckInDate, b.CheckOutDate, b.Status, b.Notes
-from Bookings b join Customers c on c.CustomerId = b.CustomerId
-where b.CustomerId=@cid order by b.BookingId desc";
+        cmd.CommandText = @"select b.BookingId, c.FullName,
+       (select top 1 r.RoomNumber from BookingRooms br join Rooms r on r.RoomId = br.RoomId where br.BookingId = b.BookingId order by br.BookingRoomId) as RoomNumber,
+       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes,
+       (select isnull(sum(((i.SubtotalRoom+i.SubtotalService)+i.Tax)-i.Discount),0) from Invoices i where i.BookingId = b.BookingId) as TotalDue,
+       (select isnull(sum(p.Amount),0) from Payments p where p.BookingId = b.BookingId) as AmountPaid
+from Bookings b
+join Customers c on c.CustomerId = b.CustomerId
+where b.CustomerId=@cid
+order by b.BookingId desc";
         cmd.Parameters.Add(new SqlParameter("@cid", SqlDbType.Int) { Value = customerId });
         await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct);
         while (await rd.ReadAsync(ct))
@@ -47,10 +62,13 @@ where b.CustomerId=@cid order by b.BookingId desc";
             {
                 BookingId = rd.GetInt32(0),
                 CustomerName = rd.GetString(1),
-                CheckInDate = rd.GetDateTime(2),
-                CheckOutDate = rd.GetDateTime(3),
-                Status = rd.GetString(4),
-                Notes = await rd.IsDBNullAsync(5, ct) ? null : rd.GetString(5)
+                RoomNumber = await rd.IsDBNullAsync(2, ct) ? null : rd.GetString(2),
+                CheckInDate = rd.GetDateTime(3),
+                CheckOutDate = rd.GetDateTime(4),
+                Status = rd.GetString(5),
+                Notes = await rd.IsDBNullAsync(6, ct) ? null : rd.GetString(6),
+                TotalDue = rd.GetDecimal(7),
+                AmountPaid = rd.GetDecimal(8)
             });
         }
         return list;

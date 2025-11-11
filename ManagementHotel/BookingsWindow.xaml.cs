@@ -14,8 +14,17 @@ public partial class BookingsWindow : Window
     public BookingsWindow()
     {
         InitializeComponent();
-        Loaded += async (_, __) => await ReloadAsync();
+        Loaded += async (_, __) =>
+        {
+            UpdateCurrentUserLabel();
+            await ReloadAsync();
+        };
         ApplyRolePermissions();
+    }
+
+    private void UpdateCurrentUserLabel()
+    {
+        txtCurrentUser.Text = AppSession.CurrentUser?.Username ?? "Guest";
     }
 
     private async Task ReloadAsync()
@@ -32,14 +41,13 @@ public partial class BookingsWindow : Window
             {
                 items = await _service.GetAllAsync(conn);
             }
-            _allItems = items;
-            ApplyStatusFilter();
+            dg.ItemsSource = items;
         }
         catch (Exception ex)
         {
             MessageBox.Show(ex.Message, "Load Bookings Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        ApplyRolePermissions();
+        UpdateCurrentUserLabel();
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e)
@@ -118,46 +126,19 @@ public partial class BookingsWindow : Window
             MessageBox.Show(ex.Message, "Delete Booking Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
-
     private void ApplyRolePermissions()
     {
-        if (AppSession.IsAdmin)
-        {
-            btnAdd.IsEnabled = true;
-            btnEdit.IsEnabled = true;
-            btnDelete.IsEnabled = true;
-            return;
-        }
-        if (AppSession.IsStaff)
-        {
-            btnAdd.IsEnabled = true;
-            btnEdit.IsEnabled = true;
-            btnDelete.IsEnabled = false;
-            return;
-        }
-        // Customer: only Add new booking
-        btnAdd.IsEnabled = true;
-        btnEdit.IsEnabled = false;
-        btnDelete.IsEnabled = false;
+        // No-op: action buttons were removed from the UI
     }
 
-    private void StatusFilter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    private void Close_Click(object sender, RoutedEventArgs e)
     {
-        if (!IsLoaded) return; // avoid running during InitializeComponent
-        ApplyStatusFilter();
+        Close();
     }
 
-    private void ApplyStatusFilter()
+    private void OpenProfile_Click(object sender, RoutedEventArgs e)
     {
-        if (_allItems is null) return;
-        if (dg == null) return; // DataGrid not ready yet
-        string? selected = (cbStatusFilter?.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString();
-        if (string.IsNullOrEmpty(selected) || selected == "All")
-        {
-            dg.ItemsSource = _allItems;
-            return;
-        }
-        var filtered = _allItems.Where(i => string.Equals(i.Status, selected, StringComparison.OrdinalIgnoreCase)).ToList();
-        dg.ItemsSource = filtered;
+        var w = new ProfileWindow { Owner = this };
+        w.ShowDialog();
     }
 }

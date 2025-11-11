@@ -118,7 +118,6 @@ namespace ManagementHotel
                 colBook.Visibility = Visibility.Visible;
                 colCurrentCustomer.Visibility = Visibility.Collapsed;
 
-                btnNavProfile.Visibility = Visibility.Visible;
                 btnNavRooms.Visibility = Visibility.Collapsed;
                 btnNavBookings.Visibility = Visibility.Collapsed;
                 btnNavRoomTypes.Visibility = Visibility.Collapsed;
@@ -143,7 +142,6 @@ namespace ManagementHotel
                 dgRooms.Visibility = Visibility.Visible;
                 colCurrentCustomer.Visibility = Visibility.Visible;
 
-                btnNavProfile.Visibility = Visibility.Visible;
                 btnNavRooms.Visibility = Visibility.Visible;
                 btnNavBookings.Visibility = Visibility.Visible;
                 btnNavRoomTypes.Visibility = Visibility.Visible;

@@ -17,10 +17,17 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="140"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <TextBlock Text="Customer" VerticalAlignment="Center"/>
-        <ComboBox x:Name="cbCustomer" Grid.Column="1" Margin="8,0,0,6" DisplayMemberPath="FullName" SelectedValuePath="CustomerId"/>
+        <TextBox x:Name="txtCustomer" Grid.Column="1" Margin="8,0,0,6" IsReadOnly="True"/>
+        <Button x:Name="btnSelectCustomer" Grid.Column="2" Width="90" Margin="8,0,0,6" Click="SelectCustomer_Click">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8B2;"/>
+                <TextBlock Text="Select" Margin="6,0,0,0"/>
+            </StackPanel>
+        </Button>
 
         <TextBlock Grid.Row="1" Text="Room" VerticalAlignment="Center"/>
         <ComboBox x:Name="cbRoom" Grid.Row="1" Grid.Column="1" Margin="8,0,0,6" DisplayMemberPath="RoomNumber" SelectedValuePath="RoomId" SelectionChanged="Room_SelectionChanged"/>
@@ -31,11 +38,8 @@
         <TextBlock Grid.Row="3" Text="Check-out" VerticalAlignment="Center"/>
         <DatePicker x:Name="dpCheckOut" Grid.Row="3" Grid.Column="1" Margin="8,0,0,6" SelectedDateChanged="Date_SelectedDateChanged"/>
 
-        <TextBlock Grid.Row="4" Text="Số người" VerticalAlignment="Center"/>
-        <TextBox x:Name="txtGuests" Grid.Row="4" Grid.Column="1" Margin="8,0,0,6" PreviewTextInput="Guests_PreviewTextInput" MaxLength="2" TextChanged="Guests_TextChanged"/>
-
-        <TextBlock Grid.Row="5" Text="Status" VerticalAlignment="Center"/>
-        <ComboBox x:Name="cbStatus" Grid.Row="5" Grid.Column="1" Margin="8,0,0,6">
+        <TextBlock Grid.Row="4" Text="Status" VerticalAlignment="Center"/>
+        <ComboBox x:Name="cbStatus" Grid.Row="4" Grid.Column="1" Margin="8,0,0,6">
             <ComboBoxItem Content="Reserved"/>
             <ComboBoxItem Content="CheckedIn"/>
             <ComboBoxItem Content="CheckedOut"/>
