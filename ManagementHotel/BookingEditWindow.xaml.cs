@@ -1,8 +1,10 @@
-using System.Windows;
+using System.Globalization;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using HotelManagementBLL;
 using HotelManagementModels;
-using System.Windows.Controls;
 
 namespace ManagementHotel;
 
@@ -12,6 +14,7 @@ public partial class BookingEditWindow : Window
     private readonly ICustomerService _customerService = new CustomerService();
     private readonly IRoomService _roomService = new RoomService();
     private Customer? _selectedCustomer;
+    private bool _isInitialized;
 
     public BookingEditWindow(Booking? model = null)
     {
@@ -22,12 +25,17 @@ public partial class BookingEditWindow : Window
             await LoadCustomerAsync();
             await LoadRoomsAsync();
             BindFromModel();
-            // lock customer selection for Customer role
-            if (AppSession.IsCustomer && AppSession.CurrentUser?.CustomerId is int cid && cid > 0)
+            if (Model.CustomerId <= 0 && AppSession.CurrentUser?.CustomerId is int sessionCid && sessionCid > 0)
             {
-                await SetCustomerAsync(cid);
+                await SetCustomerAsync(sessionCid);
+            }
+            // lock customer selection for Customer role
+            if (AppSession.IsCustomer)
+            {
                 btnSelectCustomer.IsEnabled = false;
             }
+            _isInitialized = true;
+            UpdateTotal();
         };
     }
 
@@ -80,6 +88,13 @@ public partial class BookingEditWindow : Window
             }
         }
         txtNotes.Text = Model.Notes ?? string.Empty;
+        var guests = Model.Guests > 0 ? Model.Guests : 1;
+        Model.Guests = guests;
+        txtGuests.Text = guests.ToString();
+        if (Model.TotalDue > 0)
+        {
+            txtTotal.Text = FormatCurrency(Model.TotalDue);
+        }
     }
 
     private bool BindToModel()
@@ -108,12 +123,20 @@ public partial class BookingEditWindow : Window
             MessageBox.Show("Check-out must be after check-in", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
+        if (!int.TryParse(txtGuests.Text, out var guests) || guests <= 0)
+        {
+            MessageBox.Show("Vui lòng nhập số người hợp lệ", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+            txtGuests.Focus();
+            return false;
+        }
         var status = (cbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Pending";
         Model.RoomId = roomId;
         Model.CheckInDate = ci;
         Model.CheckOutDate = co;
         Model.Status = status;
         Model.Notes = string.IsNullOrWhiteSpace(txtNotes.Text) ? null : txtNotes.Text.Trim();
+        Model.Guests = guests;
+        Model.TotalDue = CalculateTotal();
         return true;
     }
 
@@ -133,6 +156,7 @@ public partial class BookingEditWindow : Window
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         if (!BindToModel()) return;
+        UpdateTotal();
         DialogResult = true;
         Close();
     }
@@ -141,5 +165,67 @@ public partial class BookingEditWindow : Window
     {
         DialogResult = false;
         Close();
+    }
+
+    private void Date_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isInitialized) return;
+        UpdateTotal();
+    }
+
+    private void Room_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isInitialized) return;
+        UpdateTotal();
+    }
+
+    private void Guests_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        foreach (var ch in e.Text)
+        {
+            if (!char.IsDigit(ch))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+    }
+
+    private void Guests_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_isInitialized) return;
+        if (int.TryParse(txtGuests.Text, out var guests) && guests > 0)
+        {
+            Model.Guests = guests;
+        }
+    }
+
+    private decimal CalculateTotal()
+    {
+        if (dpCheckIn.SelectedDate is not System.DateTime checkIn || dpCheckOut.SelectedDate is not System.DateTime checkOut)
+            return 0m;
+        if (cbRoom.SelectedItem is not Room room)
+            return 0m;
+        var nights = (checkOut.Date - checkIn.Date).Days;
+        if (nights < 1)
+            nights = 1;
+        return nights * room.PricePerNight;
+    }
+
+    private void UpdateTotal()
+    {
+        var total = CalculateTotal();
+        txtTotal.Text = FormatCurrency(total);
+        if (_isInitialized)
+        {
+            Model.TotalDue = total;
+        }
+    }
+
+    private static string FormatCurrency(decimal amount)
+    {
+        if (amount <= 0)
+            return "0 ₫";
+        return string.Concat(amount.ToString("N0", CultureInfo.CurrentCulture), " ₫");
     }
 }
