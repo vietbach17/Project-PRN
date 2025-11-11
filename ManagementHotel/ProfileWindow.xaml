@@ -53,50 +53,49 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,4,0,0">
-            <GroupBox Header="Account">
-                <UniformGrid Columns="2" Rows="4" Margin="4">
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Username</TextBlock>
-                    <TextBox x:Name="txtUsername" Margin="0,4"/>
+        <GroupBox Grid.Row="1" Header="Account" Margin="0,4,0,0">
+            <UniformGrid Columns="2" Rows="7" Margin="4">
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Full Name"/>
+                <TextBox x:Name="txtFullName" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Current Password</TextBlock>
-                    <PasswordBox x:Name="txtCurrentPass" Margin="0,4"/>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Username"/>
+                <TextBox x:Name="txtUsername" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">New Password</TextBlock>
-                    <PasswordBox x:Name="txtNewPass" Margin="0,4"/>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Password"/>
+                <PasswordBox x:Name="txtPassword" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Confirm</TextBlock>
-                    <PasswordBox x:Name="txtConfirm" Margin="0,4"/>
-                </UniformGrid>
-            </GroupBox>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Email"/>
+                <TextBox x:Name="txtEmail" Margin="0,4"/>
 
-            <GroupBox Header="Customer">
-                <UniformGrid Columns="2" Rows="3" Margin="4">
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Full name</TextBlock>
-                    <TextBox x:Name="txtFullName" Margin="0,4"/>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Phone"/>
+                <TextBox x:Name="txtPhone" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Email</TextBlock>
-                    <TextBox x:Name="txtEmail" Margin="0,4"/>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="ID Number"/>
+                <TextBox x:Name="txtIDNumber" Margin="0,4"/>
 
-                    <TextBlock Margin="0,6,8,6" VerticalAlignment="Center">Phone</TextBlock>
-                    <TextBox x:Name="txtPhone" Margin="0,4"/>
-                </UniformGrid>
-            </GroupBox>
-        </StackPanel>
+                <TextBlock Margin="0,6,8,6" VerticalAlignment="Center" Text="Address"/>
+                <TextBox x:Name="txtAddress" Margin="0,4" Height="Auto"/>
+            </UniformGrid>
+        </GroupBox>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Width="110" Margin="0,12,8,0" Click="Save_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE105;" Margin="0,0,6,0"/>
-                    <TextBlock Text="Save"/>
-                </StackPanel>
-            </Button>
-            <Button Width="110" Margin="0,12,0,0" Click="Cancel_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" Margin="0,0,6,0"/>
-                    <TextBlock Text="Cancel"/>
-                </StackPanel>
-            </Button>
+        <StackPanel Grid.Row="2" HorizontalAlignment="Right">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Width="110" Margin="0,12,8,0" Click="Save_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE105;" Margin="0,0,6,0"/>
+                        <TextBlock Text="Save"/>
+                    </StackPanel>
+                </Button>
+                <Button Width="110" Margin="0,12,0,0" Click="Cancel_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" Margin="0,0,6,0"/>
+                        <TextBlock Text="Cancel"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <TextBlock HorizontalAlignment="Right" Margin="0,8,0,0">
+                <Hyperlink Click="ChangePassword_Click">Change password</Hyperlink>
+            </TextBlock>
         </StackPanel>
     </Grid>
 </Window>

@@ -7,28 +7,26 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Vertical">
-            <GroupBox Header="Account">
-                <UniformGrid Columns="2" Rows="3" Margin="4">
-                    <TextBlock VerticalAlignment="Center">Username</TextBlock>
-                    <TextBox x:Name="txtUsername"/>
-                    <TextBlock VerticalAlignment="Center">Password</TextBlock>
-                    <PasswordBox x:Name="txtPassword"/>
-                    <TextBlock VerticalAlignment="Center">Confirm</TextBlock>
-                    <PasswordBox x:Name="txtConfirm"/>
-                </UniformGrid>
-            </GroupBox>
-            <GroupBox Header="Customer">
-                <UniformGrid Columns="2" Rows="3" Margin="4">
-                    <TextBlock VerticalAlignment="Center">Full name</TextBlock>
-                    <TextBox x:Name="txtFullName"/>
-                    <TextBlock VerticalAlignment="Center">Email</TextBlock>
-                    <TextBox x:Name="txtEmail"/>
-                    <TextBlock VerticalAlignment="Center">Phone</TextBlock>
-                    <TextBox x:Name="txtPhone"/>
-                </UniformGrid>
-            </GroupBox>
-        </StackPanel>
+        <GroupBox Header="Account" Margin="0,0,0,12">
+            <UniformGrid Columns="2" Rows="9" Margin="4">
+                <TextBlock VerticalAlignment="Center" Text="Full Name"/>
+                <TextBox x:Name="txtFullName"/>
+                <TextBlock VerticalAlignment="Center" Text="Username"/>
+                <TextBox x:Name="txtUsername"/>
+                <TextBlock VerticalAlignment="Center" Text="Password"/>
+                <PasswordBox x:Name="txtPassword"/>
+                <TextBlock VerticalAlignment="Center" Text="Confirm Password"/>
+                <PasswordBox x:Name="txtConfirm"/>
+                <TextBlock VerticalAlignment="Center" Text="Email"/>
+                <TextBox x:Name="txtEmail"/>
+                <TextBlock VerticalAlignment="Center" Text="Phone"/>
+                <TextBox x:Name="txtPhone"/>
+                <TextBlock VerticalAlignment="Center" Text="ID Number"/>
+                <TextBox x:Name="txtIDNumber"/>
+                <TextBlock VerticalAlignment="Center" Text="Address"/>
+                <TextBox x:Name="txtAddress"/>
+            </UniformGrid>
+        </GroupBox>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Width="110" Margin="0,12,8,0" Click="Register_Click">
                 <StackPanel Orientation="Horizontal">

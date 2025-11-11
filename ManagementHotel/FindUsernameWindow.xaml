@@ -1,0 +1,20 @@
+<Window x:Class="ManagementHotel.FindUsernameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Find Username" Height="220" Width="360" WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="ID Number" Margin="0,0,0,4"/>
+            <TextBox x:Name="txtIDNumber" Margin="0,0,0,12"/>
+            <TextBlock x:Name="txtResult" FontWeight="SemiBold" Visibility="Collapsed"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Width="90" Margin="0,0,8,0" Click="Find_Click">Find</Button>
+            <Button Width="90" Click="Close_Click">Close</Button>
+        </StackPanel>
+    </Grid>
+</Window>

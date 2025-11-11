@@ -12,8 +12,14 @@ public class BookingRepository : IBookingRepository
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync(ct);
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"select b.BookingId, c.FullName, b.CheckInDate, b.CheckOutDate, b.Status, b.Notes
-from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.BookingId desc";
+        cmd.CommandText = @"select b.BookingId, c.FullName,
+       (select top 1 r.RoomNumber from BookingRooms br join Rooms r on r.RoomId = br.RoomId where br.BookingId = b.BookingId order by br.BookingRoomId) as RoomNumber,
+       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes,
+       (select isnull(sum(((i.SubtotalRoom+i.SubtotalService)+i.Tax)-i.Discount),0) from Invoices i where i.BookingId = b.BookingId) as TotalDue,
+       (select isnull(sum(p.Amount),0) from Payments p where p.BookingId = b.BookingId) as AmountPaid
+from Bookings b
+join Customers c on c.CustomerId = b.CustomerId
+order by b.BookingId desc";
         await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct);
         while (await rd.ReadAsync(ct))
         {
@@ -21,10 +27,13 @@ from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.Booki
             {
                 BookingId = rd.GetInt32(0),
                 CustomerName = rd.GetString(1),
-                CheckInDate = rd.GetDateTime(2),
-                CheckOutDate = rd.GetDateTime(3),
-                Status = rd.GetString(4),
-                Notes = await rd.IsDBNullAsync(5, ct) ? null : rd.GetString(5)
+                RoomNumber = await rd.IsDBNullAsync(2, ct) ? null : rd.GetString(2),
+                CheckInDate = rd.GetDateTime(3),
+                CheckOutDate = rd.GetDateTime(4),
+                Status = rd.GetString(5),
+                Notes = await rd.IsDBNullAsync(6, ct) ? null : rd.GetString(6),
+                TotalDue = rd.GetDecimal(7),
+                AmountPaid = rd.GetDecimal(8)
             });
         }
         return list;
@@ -36,9 +45,15 @@ from Bookings b join Customers c on c.CustomerId = b.CustomerId order by b.Booki
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync(ct);
         var cmd = conn.CreateCommand();
-        cmd.CommandText = @"select b.BookingId, c.FullName, b.CheckInDate, b.CheckOutDate, b.Status, b.Notes
-from Bookings b join Customers c on c.CustomerId = b.CustomerId
-where b.CustomerId=@cid order by b.BookingId desc";
+        cmd.CommandText = @"select b.BookingId, c.FullName,
+       (select top 1 r.RoomNumber from BookingRooms br join Rooms r on r.RoomId = br.RoomId where br.BookingId = b.BookingId order by br.BookingRoomId) as RoomNumber,
+       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes,
+       (select isnull(sum(((i.SubtotalRoom+i.SubtotalService)+i.Tax)-i.Discount),0) from Invoices i where i.BookingId = b.BookingId) as TotalDue,
+       (select isnull(sum(p.Amount),0) from Payments p where p.BookingId = b.BookingId) as AmountPaid
+from Bookings b
+join Customers c on c.CustomerId = b.CustomerId
+where b.CustomerId=@cid
+order by b.BookingId desc";
         cmd.Parameters.Add(new SqlParameter("@cid", SqlDbType.Int) { Value = customerId });
         await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct);
         while (await rd.ReadAsync(ct))
@@ -47,10 +62,13 @@ where b.CustomerId=@cid order by b.BookingId desc";
             {
                 BookingId = rd.GetInt32(0),
                 CustomerName = rd.GetString(1),
-                CheckInDate = rd.GetDateTime(2),
-                CheckOutDate = rd.GetDateTime(3),
-                Status = rd.GetString(4),
-                Notes = await rd.IsDBNullAsync(5, ct) ? null : rd.GetString(5)
+                RoomNumber = await rd.IsDBNullAsync(2, ct) ? null : rd.GetString(2),
+                CheckInDate = rd.GetDateTime(3),
+                CheckOutDate = rd.GetDateTime(4),
+                Status = rd.GetString(5),
+                Notes = await rd.IsDBNullAsync(6, ct) ? null : rd.GetString(6),
+                TotalDue = rd.GetDecimal(7),
+                AmountPaid = rd.GetDecimal(8)
             });
         }
         return list;
@@ -125,6 +143,74 @@ values(@Bid, @RoomId, 1, (select PricePerNight from Rooms where RoomId=@RoomId))
             await cmdBr.ExecuteNonQueryAsync(ct);
         }
         return bookingId;
+    }
+
+    public async Task RecalculateInvoiceTotalsAsync(string connectionString, int bookingId, CancellationToken ct = default)
+    {
+        await using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync(ct);
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync(ct);
+        try
+        {
+            int invoiceId;
+            await using (var cmdInv = conn.CreateCommand())
+            {
+                cmdInv.Transaction = tx;
+                cmdInv.CommandText = @"select top 1 InvoiceId from Invoices where BookingId=@Bid order by InvoiceId desc";
+                cmdInv.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                var result = await cmdInv.ExecuteScalarAsync(ct);
+                if (result is int existId)
+                {
+                    invoiceId = existId;
+                }
+                else
+                {
+                    await using var cmdCreate = conn.CreateCommand();
+                    cmdCreate.Transaction = tx;
+                    cmdCreate.CommandText = @"insert into Invoices(BookingId, SubtotalRoom, SubtotalService, Tax, Discount)
+values(@Bid,0,0,0,0); select cast(SCOPE_IDENTITY() as int);";
+                    cmdCreate.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                    invoiceId = (int)await cmdCreate.ExecuteScalarAsync(ct);
+                }
+            }
+
+            await using (var cmdRecalc = conn.CreateCommand())
+            {
+                cmdRecalc.Transaction = tx;
+                cmdRecalc.CommandText = "exec dbo.sp_RecalculateInvoiceTotals @InvoiceId";
+                cmdRecalc.Parameters.Add(new SqlParameter("@InvoiceId", SqlDbType.Int) { Value = invoiceId });
+                await cmdRecalc.ExecuteNonQueryAsync(ct);
+            }
+
+            await using (var cmdAgg = conn.CreateCommand())
+            {
+                cmdAgg.Transaction = tx;
+                cmdAgg.CommandText = @"select Total from Invoices where InvoiceId=@InvoiceId";
+                cmdAgg.Parameters.Add(new SqlParameter("@InvoiceId", SqlDbType.Int) { Value = invoiceId });
+                var total = (decimal)(await cmdAgg.ExecuteScalarAsync(ct) ?? 0m);
+
+                await using var cmdDelPay = conn.CreateCommand();
+                cmdDelPay.Transaction = tx;
+                cmdDelPay.CommandText = "delete from Payments where BookingId=@Bid";
+                cmdDelPay.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                await cmdDelPay.ExecuteNonQueryAsync(ct);
+
+                await using var cmdPay = conn.CreateCommand();
+                cmdPay.Transaction = tx;
+                cmdPay.CommandText = @"insert into Payments(BookingId, Amount, Method, PaidAt)
+values(@Bid, @Amount, N'Pending', SYSDATETIME());";
+                cmdPay.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                cmdPay.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = total });
+                await cmdPay.ExecuteNonQueryAsync(ct);
+            }
+
+            await tx.CommitAsync(ct);
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
     }
 
     public async Task<bool> UpdateAsync(string connectionString, Booking booking, CancellationToken ct = default)

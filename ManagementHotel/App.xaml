@@ -23,6 +23,7 @@
             <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="13"/>
+            <EventSetter Event="Loaded" Handler="WindowLoaded"/>
         </Style>
 
         <!-- Buttons -->
@@ -129,6 +130,10 @@
         <!-- Helpers -->
         <Style x:Key="RightAlignText" TargetType="TextBlock">
             <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="CenterAlignText" TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
     </Application.Resources>

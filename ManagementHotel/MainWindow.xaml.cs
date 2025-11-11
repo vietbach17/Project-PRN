@@ -21,6 +21,7 @@ namespace ManagementHotel
     {
         private readonly IRoomService _roomService = new RoomService();
         private readonly IBookingService _bookingService = new BookingService();
+        private BookingsWindow? _bookingsWindow;
 
         public MainWindow()
         {
@@ -71,8 +72,18 @@ namespace ManagementHotel
 
         private void OpenBookings_Click(object sender, RoutedEventArgs e)
         {
-            var w = new BookingsWindow { Owner = this };
-            w.Show();
+            if (_bookingsWindow == null || !_bookingsWindow.IsLoaded)
+            {
+                _bookingsWindow = new BookingsWindow { Owner = this };
+                _bookingsWindow.Closed += (_, __) => _bookingsWindow = null;
+                _bookingsWindow.Show();
+            }
+            else
+            {
+                if (_bookingsWindow.WindowState == WindowState.Minimized)
+                    _bookingsWindow.WindowState = WindowState.Normal;
+                _bookingsWindow.Activate();
+            }
         }
 
         private void OpenServices_Click(object sender, RoutedEventArgs e)
@@ -126,12 +137,11 @@ namespace ManagementHotel
                 colBook.Visibility = Visibility.Visible;
                 colCurrentCustomer.Visibility = Visibility.Collapsed;
 
-                btnNavProfile.Visibility = Visibility.Visible;
                 btnNavRooms.Visibility = Visibility.Collapsed;
                 btnNavBookings.Visibility = Visibility.Collapsed;
                 btnNavRoomTypes.Visibility = Visibility.Collapsed;
                 btnNavCustomers.Visibility = Visibility.Collapsed;
-                btnNavServices.Visibility = Visibility.Collapsed;
+                btnNavServices.Visibility = Visibility.Visible;
                 btnNavInvoices.Visibility = Visibility.Collapsed;
                 btnNavHousekeeping.Visibility = Visibility.Collapsed;
                 navMgmtSeparator.Visibility = Visibility.Collapsed;
@@ -151,7 +161,6 @@ namespace ManagementHotel
                 dgRooms.Visibility = Visibility.Visible;
                 colCurrentCustomer.Visibility = Visibility.Visible;
 
-                btnNavProfile.Visibility = Visibility.Visible;
                 btnNavRooms.Visibility = Visibility.Visible;
                 btnNavBookings.Visibility = Visibility.Visible;
                 btnNavRoomTypes.Visibility = Visibility.Visible;

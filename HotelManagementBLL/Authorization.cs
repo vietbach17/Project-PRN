@@ -20,10 +20,13 @@ public static class Authorization
             throw new UnauthorizedAccessException("You do not have permission to create a booking.");
     }
 
-    public static void EnsureCanUpdateBooking()
+    public static void EnsureCanUpdateBooking(int customerId)
     {
-        if (!(RoleContext.IsAdmin || RoleContext.IsStaff))
-            throw new UnauthorizedAccessException("You do not have permission to update a booking.");
+        if (RoleContext.IsAdmin || RoleContext.IsStaff)
+            return;
+        if (RoleContext.IsCustomer && RoleContext.CustomerId.HasValue && RoleContext.CustomerId.Value == customerId)
+            return;
+        throw new UnauthorizedAccessException("You do not have permission to update a booking.");
     }
 
     public static void EnsureCanDeleteBooking()

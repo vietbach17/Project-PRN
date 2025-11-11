@@ -64,6 +64,7 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
         var u = AppSession.CurrentUser;
         txtUsername.Text = u.Username;
+        txtPassword.Password = string.Empty;
         // Load customer info if mapped
         if (u.CustomerId is int cid && cid > 0)
         {
@@ -74,6 +75,8 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
                 txtFullName.Text = c.FullName ?? string.Empty;
                 txtEmail.Text = c.Email ?? string.Empty;
                 txtPhone.Text = c.Phone ?? string.Empty;
+                txtIDNumber.Text = c.IDNumber ?? string.Empty;
+                txtAddress.Text = c.Address ?? string.Empty;
             }
         }
         else
@@ -81,6 +84,8 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
             txtFullName.IsEnabled = false;
             txtEmail.IsEnabled = false;
             txtPhone.IsEnabled = false;
+            txtIDNumber.IsEnabled = false;
+            txtAddress.IsEnabled = false;
         }
     }
 
@@ -102,35 +107,20 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
         }
 
         // Password change (optional)
-        string newPass = txtNewPass.Password;
-        string confirm = txtConfirm.Password;
-        if (!string.IsNullOrEmpty(newPass) || !string.IsNullOrEmpty(confirm))
-        {
-            // require current password to change
-            string current = txtCurrentPass.Password;
-            if (string.IsNullOrEmpty(current))
-            {
-                MessageBox.Show("Please enter your current password to change it.");
-                return;
-            }
-            if (!VerifyPasswordLocal(u.PasswordHash, current))
-            {
-                MessageBox.Show("Current password is incorrect.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            if (newPass != confirm)
-            {
-                MessageBox.Show("Password confirmation does not match");
-                return;
-            }
-        }
+        string password = txtPassword.Password;
 
         // Email validate
-        if (!ValidateEmail(txtEmail.Text.Trim()))
+        string email = txtEmail.Text.Trim();
+        if (!ValidateEmail(email))
         {
             MessageBox.Show("Invalid email format");
             return;
         }
+
+        string idNumber = txtIDNumber.Text.Trim();
+        string address = txtAddress.Text.Trim();
+        string phone = txtPhone.Text.Trim();
+        string fullName = txtFullName.Text.Trim();
 
         try
         {
@@ -142,9 +132,9 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
             }
 
             // Update password if provided
-            if (!string.IsNullOrEmpty(newPass))
+            if (!string.IsNullOrEmpty(password))
             {
-                var hash = ComputeSha256Hex(newPass);
+                var hash = ComputeSha256Hex(password);
                 await _usersRepo.UpdatePasswordHashAsync(conn, u.UserId, hash);
                 u.PasswordHash = hash;
             }
@@ -158,6 +148,8 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
                     c.FullName = string.IsNullOrWhiteSpace(txtFullName.Text) ? c.FullName : txtFullName.Text.Trim();
                     c.Email = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim();
                     c.Phone = string.IsNullOrWhiteSpace(txtPhone.Text) ? null : txtPhone.Text.Trim();
+                    c.IDNumber = string.IsNullOrWhiteSpace(txtIDNumber.Text) ? null : txtIDNumber.Text.Trim();
+                    c.Address = string.IsNullOrWhiteSpace(txtAddress.Text) ? null : txtAddress.Text.Trim();
                     await _customerService.UpdateAsync(conn, c);
                 }
             }
@@ -174,5 +166,11 @@ static bool VerifyPasswordLocal(string storedHashOrPlain, string inputPlain)
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void ChangePassword_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ChangePasswordWindow { Owner = this };
+        dlg.ShowDialog();
     }
 }

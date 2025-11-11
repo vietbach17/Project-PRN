@@ -12,4 +12,5 @@ public class Booking
     public string Status { get; set; } = "Pending"; // Pending, Confirmed, Cancelled
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<BookingServiceItem> Services { get; set; } = new();
 }

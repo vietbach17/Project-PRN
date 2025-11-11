@@ -1,8 +1,10 @@
-using System.Windows;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using HotelManagementBLL;
 using HotelManagementModels;
-using System.Windows.Controls;
 
 namespace ManagementHotel;
 
@@ -11,6 +13,9 @@ public partial class BookingEditWindow : Window
     public Booking Model { get; private set; }
     private readonly ICustomerService _customerService = new CustomerService();
     private readonly IRoomService _roomService = new RoomService();
+    private readonly IBookingServiceItemService _bookingServiceItems = new BookingServiceItemService();
+    private Customer? _selectedCustomer;
+    private List<BookingServiceItem> _selectedServices = new();
 
     public BookingEditWindow(Booking? model = null)
     {
@@ -18,25 +23,34 @@ public partial class BookingEditWindow : Window
         Model = model ?? new Booking { Status = "Pending", CheckInDate = System.DateTime.Today, CheckOutDate = System.DateTime.Today.AddDays(1) };
         Loaded += async (_, __) =>
         {
-            await LoadCustomersAsync();
             await LoadRoomsAsync();
+            await LoadCustomerAsync();
             BindFromModel();
             // lock customer selection for Customer role
             if (AppSession.IsCustomer && AppSession.CurrentUser?.CustomerId is int cid && cid > 0)
             {
-                cbCustomer.SelectedValue = cid;
-                cbCustomer.IsEnabled = false;
-                Model.CustomerId = cid;
+                await SetCustomerByIdAsync(cid);
+                btnSelectCustomer.IsEnabled = false;
+                lblStatus.Visibility = Visibility.Collapsed;
+                cbStatus.Visibility = Visibility.Collapsed;
+                foreach (var item in cbStatus.Items.OfType<ComboBoxItem>())
+                {
+                    if ((string)item.Content == "Pending")
+                    {
+                        cbStatus.SelectedItem = item;
+                        break;
+                    }
+                }
             }
         };
     }
 
-    private async Task LoadCustomersAsync()
+    private async Task LoadCustomerAsync()
     {
-        string conn = Config.GetConnectionString();
-        var customers = await _customerService.GetAllAsync(conn);
-        cbCustomer.ItemsSource = customers;
-        cbCustomer.SelectedValue = Model.CustomerId == 0 && customers.Count > 0 ? customers[0].CustomerId : Model.CustomerId;
+        if (Model.CustomerId > 0)
+        {
+            await SetCustomerByIdAsync(Model.CustomerId);
+        }
     }
 
     private async Task LoadRoomsAsync()
@@ -54,6 +68,7 @@ public partial class BookingEditWindow : Window
     {
         dpCheckIn.SelectedDate = Model.CheckInDate.Date;
         dpCheckOut.SelectedDate = Model.CheckOutDate.Date;
+        txtCustomer.Text = _selectedCustomer?.FullName ?? string.Empty;
         foreach (var item in cbStatus.Items)
         {
             if (item is ComboBoxItem cbi && (string)cbi.Content == (Model.Status ?? "Pending"))
@@ -63,14 +78,18 @@ public partial class BookingEditWindow : Window
             }
         }
         txtNotes.Text = Model.Notes ?? string.Empty;
+        if (Model.Services != null && Model.Services.Count > 0)
+            _selectedServices = Model.Services.Select(CloneService).ToList();
+        else
+            _selectedServices = new List<BookingServiceItem>();
+        UpdateServiceSummary();
     }
 
     private bool BindToModel()
     {
-        if (cbCustomer.SelectedValue is not int customerId)
+        if (Model.CustomerId <= 0)
         {
             MessageBox.Show("Please select a customer", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-            cbCustomer.Focus();
             return false;
         }
         if (cbRoom.SelectedValue is not int roomId)
@@ -92,13 +111,93 @@ public partial class BookingEditWindow : Window
             return false;
         }
         var status = (cbStatus.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Pending";
-        Model.CustomerId = customerId;
         Model.RoomId = roomId;
         Model.CheckInDate = ci;
         Model.CheckOutDate = co;
         Model.Status = status;
         Model.Notes = string.IsNullOrWhiteSpace(txtNotes.Text) ? null : txtNotes.Text.Trim();
+        Model.Services = _selectedServices.Select(CloneService).ToList();
         return true;
+    }
+
+    private async Task SetCustomerByIdAsync(int customerId)
+    {
+        string conn = Config.GetConnectionString();
+        var customer = await _customerService.GetByIdAsync(conn, customerId);
+        if (customer != null)
+        {
+            SetCustomer(customer);
+        }
+    }
+
+    private void SetCustomer(Customer customer)
+    {
+        _selectedCustomer = customer;
+        Model.CustomerId = customer.CustomerId;
+        txtCustomer.Text = customer.FullName;
+    }
+
+    private async void SelectCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        if (AppSession.IsCustomer && AppSession.CurrentUser?.CustomerId is int cid && cid > 0)
+        {
+            await SetCustomerByIdAsync(cid);
+            return;
+        }
+        var picker = new CustomerPickerWindow { Owner = this };
+        if (picker.ShowDialog() == true && picker.SelectedCustomer != null)
+        {
+            SetCustomer(picker.SelectedCustomer);
+        }
+    }
+
+    private static BookingServiceItem CloneService(BookingServiceItem item) => new()
+    {
+        BookingServiceId = item.BookingServiceId,
+        BookingId = item.BookingId,
+        ServiceId = item.ServiceId,
+        ServiceName = item.ServiceName,
+        Unit = item.Unit,
+        UnitPrice = item.UnitPrice,
+        Quantity = item.Quantity
+    };
+
+    private void UpdateServiceSummary()
+    {
+        if (_selectedServices == null || _selectedServices.Count == 0)
+        {
+            txtServiceSummary.Text = "No services";
+            return;
+        }
+        int totalQty = _selectedServices.Sum(s => s.Quantity);
+        decimal totalAmount = _selectedServices.Sum(s => s.Total);
+        txtServiceSummary.Text = $"{totalQty} item(s) - {totalAmount:N0}";
+    }
+
+    private async void SelectServices_Click(object sender, RoutedEventArgs e)
+    {
+        if (Model.BookingId > 0 && (Model.Services == null || Model.Services.Count == 0) && _selectedServices.Count == 0)
+        {
+            try
+            {
+                string conn = Config.GetConnectionString();
+                var existing = await _bookingServiceItems.GetByBookingIdAsync(conn, Model.BookingId);
+                if (existing != null && existing.Count > 0)
+                {
+                    _selectedServices = existing.Select(CloneService).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Load services", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        var dlg = new ServiceSelectionWindow(_selectedServices) { Owner = this };
+        if (dlg.ShowDialog() == true)
+        {
+            _selectedServices = dlg.SelectedServices.Select(CloneService).ToList();
+            UpdateServiceSummary();
+        }
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
