@@ -63,9 +63,7 @@ where b.CustomerId=@cid order by b.BookingId desc";
         var cmd = conn.CreateCommand();
         cmd.CommandText = @"select b.BookingId, b.CustomerId,
        (select top 1 br.RoomId from BookingRooms br where br.BookingId=b.BookingId order by br.BookingRoomId) as RoomId,
-       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes, b.CreatedAt,
-       (select top 1 br.Guests from BookingRooms br where br.BookingId=b.BookingId order by br.BookingRoomId) as Guests,
-       (select isnull(sum(((i.SubtotalRoom+i.SubtotalService)+i.Tax)-i.Discount),0) from Invoices i where i.BookingId = b.BookingId) as TotalDue
+       b.CheckInDate, b.CheckOutDate, b.Status, b.Notes, b.CreatedAt
 from Bookings b where b.BookingId=@Id";
         cmd.Parameters.Add(new SqlParameter("@Id", SqlDbType.Int) { Value = bookingId });
         await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SingleRow, ct);
@@ -80,9 +78,7 @@ from Bookings b where b.BookingId=@Id";
                 CheckOutDate = rd.GetDateTime(4),
                 Status = rd.GetString(5),
                 Notes = await rd.IsDBNullAsync(6, ct) ? null : rd.GetString(6),
-                CreatedAt = rd.GetDateTime(7),
-                Guests = await rd.IsDBNullAsync(8, ct) ? 1 : rd.GetInt32(8),
-                TotalDue = await rd.IsDBNullAsync(9, ct) ? 0 : rd.GetDecimal(9)
+                CreatedAt = rd.GetDateTime(7)
             };
         }
         return null;
@@ -123,13 +119,80 @@ select cast(SCOPE_IDENTITY() as int);";
         await using (var cmdBr = conn.CreateCommand())
         {
             cmdBr.CommandText = @"insert into BookingRooms(BookingId, RoomId, Guests, RatePerNight)
-values(@Bid, @RoomId, @Guests, (select PricePerNight from Rooms where RoomId=@RoomId))";
+values(@Bid, @RoomId, 1, (select PricePerNight from Rooms where RoomId=@RoomId))";
             cmdBr.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
             cmdBr.Parameters.Add(new SqlParameter("@RoomId", SqlDbType.Int) { Value = booking.RoomId });
-            cmdBr.Parameters.Add(new SqlParameter("@Guests", SqlDbType.Int) { Value = booking.Guests > 0 ? booking.Guests : 1 });
             await cmdBr.ExecuteNonQueryAsync(ct);
         }
         return bookingId;
+    }
+
+    public async Task RecalculateInvoiceTotalsAsync(string connectionString, int bookingId, CancellationToken ct = default)
+    {
+        await using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync(ct);
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync(ct);
+        try
+        {
+            int invoiceId;
+            await using (var cmdInv = conn.CreateCommand())
+            {
+                cmdInv.Transaction = tx;
+                cmdInv.CommandText = @"select top 1 InvoiceId from Invoices where BookingId=@Bid order by InvoiceId desc";
+                cmdInv.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                var result = await cmdInv.ExecuteScalarAsync(ct);
+                if (result is int existId)
+                {
+                    invoiceId = existId;
+                }
+                else
+                {
+                    await using var cmdCreate = conn.CreateCommand();
+                    cmdCreate.Transaction = tx;
+                    cmdCreate.CommandText = @"insert into Invoices(BookingId, SubtotalRoom, SubtotalService, Tax, Discount)
+values(@Bid,0,0,0,0); select cast(SCOPE_IDENTITY() as int);";
+                    cmdCreate.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                    invoiceId = (int)await cmdCreate.ExecuteScalarAsync(ct);
+                }
+            }
+
+            await using (var cmdRecalc = conn.CreateCommand())
+            {
+                cmdRecalc.Transaction = tx;
+                cmdRecalc.CommandText = "exec dbo.sp_RecalculateInvoiceTotals @InvoiceId";
+                cmdRecalc.Parameters.Add(new SqlParameter("@InvoiceId", SqlDbType.Int) { Value = invoiceId });
+                await cmdRecalc.ExecuteNonQueryAsync(ct);
+            }
+
+            await using (var cmdAgg = conn.CreateCommand())
+            {
+                cmdAgg.Transaction = tx;
+                cmdAgg.CommandText = @"select Total from Invoices where InvoiceId=@InvoiceId";
+                cmdAgg.Parameters.Add(new SqlParameter("@InvoiceId", SqlDbType.Int) { Value = invoiceId });
+                var total = (decimal)(await cmdAgg.ExecuteScalarAsync(ct) ?? 0m);
+
+                await using var cmdDelPay = conn.CreateCommand();
+                cmdDelPay.Transaction = tx;
+                cmdDelPay.CommandText = "delete from Payments where BookingId=@Bid";
+                cmdDelPay.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                await cmdDelPay.ExecuteNonQueryAsync(ct);
+
+                await using var cmdPay = conn.CreateCommand();
+                cmdPay.Transaction = tx;
+                cmdPay.CommandText = @"insert into Payments(BookingId, Amount, Method, PaidAt)
+values(@Bid, @Amount, N'Pending', SYSDATETIME());";
+                cmdPay.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = bookingId });
+                cmdPay.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = total });
+                await cmdPay.ExecuteNonQueryAsync(ct);
+            }
+
+            await tx.CommitAsync(ct);
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
     }
 
     public async Task<bool> UpdateAsync(string connectionString, Booking booking, CancellationToken ct = default)
@@ -173,10 +236,9 @@ where br.RoomId=@RoomId and b.BookingId<>@Id and not (b.CheckOutDate <= @CheckIn
         await using (var ins = conn.CreateCommand())
         {
             ins.CommandText = @"insert into BookingRooms(BookingId, RoomId, Guests, RatePerNight)
-values(@Bid, @RoomId, @Guests, (select PricePerNight from Rooms where RoomId=@RoomId))";
+values(@Bid, @RoomId, 1, (select PricePerNight from Rooms where RoomId=@RoomId))";
             ins.Parameters.Add(new SqlParameter("@Bid", SqlDbType.Int) { Value = booking.BookingId });
             ins.Parameters.Add(new SqlParameter("@RoomId", SqlDbType.Int) { Value = booking.RoomId });
-            ins.Parameters.Add(new SqlParameter("@Guests", SqlDbType.Int) { Value = booking.Guests > 0 ? booking.Guests : 1 });
             await ins.ExecuteNonQueryAsync(ct);
         }
         return rows > 0;

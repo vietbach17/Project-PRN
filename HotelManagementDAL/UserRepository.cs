@@ -29,6 +29,33 @@ public class UserRepository : IUserRepository
         return null;
     }
 
+    public async Task<User?> GetByCustomerIdNumberAsync(string connectionString, string idNumber, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(idNumber)) return null;
+        await using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync(ct);
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"select u.UserId, u.Username, u.PasswordHash, u.Role, u.IsActive, u.CustomerId
+from Users u
+join Customers c on c.CustomerId = u.CustomerId
+where c.IDNumber = @id";
+        cmd.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar, 50) { Value = idNumber });
+        await using var rd = await cmd.ExecuteReaderAsync(CommandBehavior.SingleRow, ct);
+        if (await rd.ReadAsync(ct))
+        {
+            return new User
+            {
+                UserId = rd.GetInt32(0),
+                Username = rd.GetString(1),
+                PasswordHash = rd.GetString(2),
+                Role = rd.GetString(3),
+                IsActive = rd.GetBoolean(4),
+                CustomerId = await rd.IsDBNullAsync(5, ct) ? null : rd.GetInt32(5)
+            };
+        }
+        return null;
+    }
+
     public async Task<bool> UpdateUsernameAsync(string connectionString, int userId, string newUsername, CancellationToken ct = default)
     {
         await using var conn = new SqlConnection(connectionString);
