@@ -23,7 +23,24 @@
                 <Button Width="80" Margin="0,0,8,0" Click="Login_Click" Background="SkyBlue">Login</Button>
                 <Button Width="80" Click="Cancel_Click" Background="OrangeRed">Cancel</Button>
             </StackPanel>
-        </StackPanel>
-        
-    </Grid>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0" Grid.ColumnSpan="2" Width="294">
+                <Button Width="75" Margin="0,0,8,0" Click="Register_Click">Register</Button>
+                <Button Width="90" Margin="0,0,8,0" Click="Login_Click" Background="{StaticResource AccentBrush}" Foreground="White">Login</Button>
+                <Button Width="90" Click="Cancel_Click">Cancel</Button>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="27,20,0,0" Width="103">
+                <TextBlock Height="19" Width="103" RenderTransformOrigin="0.499,0.439">
+                    <TextBlock.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="0.379"/>
+                            <TranslateTransform X="0.01" Y="0.001"/>
+                        </TransformGroup>
+                    </TextBlock.RenderTransform><Hyperlink Click="ForgotPassword_Click"><Run Text="Forgot password?"/></Hyperlink></TextBlock>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>

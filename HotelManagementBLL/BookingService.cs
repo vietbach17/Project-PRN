@@ -1,5 +1,7 @@
 using HotelManagementDAL;
 using HotelManagementModels;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HotelManagementBLL;
 
@@ -30,6 +32,42 @@ public class BookingService : IBookingService
     {
         Authorization.EnsureCanDeleteBooking();
         return _repo.DeleteAsync(connectionString, bookingId, ct);
+    }
+
+    public async Task UpdateServicesAsync(string connectionString, int bookingId, IEnumerable<BookingServiceItem> services, CancellationToken ct = default)
+    {
+        var booking = await _repo.GetByIdAsync(connectionString, bookingId, ct)
+            ?? throw new InvalidOperationException("Booking not found.");
+
+        if (RoleContext.IsCustomer)
+        {
+            if (RoleContext.CustomerId is not int cid || cid != booking.CustomerId)
+                throw new UnauthorizedAccessException("You cannot update services for this booking.");
+        }
+        else
+        {
+            Authorization.EnsureCanUpdateBooking();
+        }
+
+        await PersistServicesAsync(connectionString, bookingId, services, ct);
+        await _repo.RecalculateInvoiceTotalsAsync(connectionString, bookingId, ct);
+    }
+
+    private Task PersistServicesAsync(string connectionString, int bookingId, IEnumerable<BookingServiceItem>? services, CancellationToken ct)
+    {
+        var items = (services ?? Enumerable.Empty<BookingServiceItem>())
+            .Where(s => s.Quantity > 0)
+            .Select(s => new BookingServiceItem
+            {
+                BookingServiceId = s.BookingServiceId,
+                BookingId = bookingId,
+                ServiceId = s.ServiceId,
+                ServiceName = s.ServiceName,
+                Unit = s.Unit,
+                UnitPrice = s.UnitPrice,
+                Quantity = s.Quantity
+            }).ToList();
+        return _serviceItems.ReplaceForBookingAsync(connectionString, bookingId, items, ct);
     }
 
     private static string NormalizeStatus(string? s)

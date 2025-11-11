@@ -10,4 +10,5 @@ public interface IBookingService
     Task<int> AddAsync(string connectionString, Booking booking, CancellationToken ct = default);
     Task<bool> UpdateAsync(string connectionString, Booking booking, CancellationToken ct = default);
     Task<bool> DeleteAsync(string connectionString, int bookingId, CancellationToken ct = default);
+    Task UpdateServicesAsync(string connectionString, int bookingId, IEnumerable<BookingServiceItem> services, CancellationToken ct = default);
 }

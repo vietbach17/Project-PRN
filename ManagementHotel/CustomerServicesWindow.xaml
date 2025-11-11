@@ -1,0 +1,34 @@
+<Window x:Class="ManagementHotel.CustomerServicesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Booking Services" Height="420" Width="640" WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="0" VerticalAlignment="Center">
+            <TextBlock Text="Select a booking to add services" FontSize="16" FontWeight="SemiBold"/>
+        </StackPanel>
+
+        <DataGrid x:Name="dgBookings" Grid.Row="1" Margin="0,12,0,12" AutoGenerateColumns="False" IsReadOnly="True"
+                  SelectionMode="Single" SelectionChanged="Bookings_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Booking" Binding="{Binding Summary}" Width="2*"/>
+                <DataGridTextColumn Header="Check-in" Binding="{Binding CheckInDate, StringFormat={}{0:d}}" Width="*"/>
+                <DataGridTextColumn Header="Check-out" Binding="{Binding CheckOutDate, StringFormat={}{0:d}}" Width="*"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock x:Name="txtInfo" VerticalAlignment="Center" Margin="0,0,16,0"/>
+            <Button Width="100" Margin="0,0,8,0" Click="Refresh_Click">Refresh</Button>
+            <Button x:Name="btnSelect" Width="130" Margin="0,0,8,0" Click="SelectServices_Click" IsEnabled="False">Select Services</Button>
+            <Button Width="90" Click="Close_Click">Close</Button>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -77,8 +77,16 @@ namespace ManagementHotel
 
         private void OpenServices_Click(object sender, RoutedEventArgs e)
         {
-            var w = new ServicesWindow { Owner = this };
-            w.Show();
+            if (AppSession.IsCustomer)
+            {
+                var dlg = new CustomerServicesWindow { Owner = this };
+                dlg.ShowDialog();
+            }
+            else
+            {
+                var w = new ServicesWindow { Owner = this };
+                w.Show();
+            }
         }
 
         private void OpenInvoices_Click(object sender, RoutedEventArgs e)

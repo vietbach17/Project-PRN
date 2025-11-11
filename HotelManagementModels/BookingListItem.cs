@@ -8,4 +8,5 @@ public class BookingListItem
     public DateTime CheckOutDate { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? Notes { get; set; }
+    public string Summary => $"#{BookingId} | {CheckInDate:d} - {CheckOutDate:d} [{Status}]";
 }
